@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV3 Görev Odası: Robotik Kodlama Macerası</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #040b16;
+            --primary: #00f0ff;
+            --secondary: #bd00ff;
+            --success: #00ff66;
+            --danger: #ff0055;
+            --panel-bg: rgba(4, 15, 30, 0.85);
+            --panel-border: rgba(0, 240, 255, 0.3);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(0, 240, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(189, 0, 255, 0.08) 0%, transparent 50%);
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, .title-font {
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Glassmorphism Panels */
+        .cyber-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.1), inset 0 0 20px rgba(0, 240, 255, 0.05);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .cyber-button {
+            background: linear-gradient(45deg, rgba(0,240,255,0.1), rgba(189,0,255,0.1));
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            transition: all 0.3s ease;
+            text-shadow: 0 0 8px rgba(0,240,255,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cyber-button:hover {
+            background: var(--primary);
+            color: var(--bg-color);
+            box-shadow: 0 0 20px var(--primary);
+            text-shadow: none;
+        }
+
+        /* Code Block Styling */
+        .ev3-block {
+            background: #f59e0b; /* Default */
+            color: #000;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-family: 'Inter', monospace;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-block;
+            border-left: 8px solid rgba(0,0,0,0.2);
+            margin: 2px 0;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+            white-space: nowrap;
+        }
+        /* EV3 Classroom Colors */
+        .ev3-event { background: #ffbf00; color: #000; }
+        .ev3-control { background: #ffab19; color: #000; }
+        .ev3-motor { background: #4c97ff; color: #fff; }
+        .ev3-movement { background: #ff6680; color: #fff; }
+        .ev3-sensor { background: #5cb1d6; color: #000; }
+        .ev3-operator { background: #59c059; color: #fff; }
+
+        /* Animations */
+        @keyframes pulse-glow {
+            0% { filter: drop-shadow(0 0 2px var(--primary)); }
+            50% { filter: drop-shadow(0 0 10px var(--primary)); }
+            100% { filter: drop-shadow(0 0 2px var(--primary)); }
+        }
+
+        @keyframes scan-line {
+            0% { top: -10%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 110%; opacity: 0; }
+        }
+
+        .scanner {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+            animation: scan-line 3s infinite linear;
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        /* Robot SVG Styles */
+        .robot-part {
+            transition: all 1s ease;
+            opacity: 0.1;
+            filter: grayscale(100%);
+        }
+        
+        .robot-part.active {
+            opacity: 1;
+            filter: grayscale(0%);
+        }
+
+        .active .anim-wheel { transform-origin: center; animation: spin 2s infinite linear; }
+        .active .anim-wave { animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; }
+        .active .anim-light { animation: blink 1s infinite alternate; }
+        
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes blink { 100% { opacity: 0.5; } }
+        
+        /* Final Path Animation */
+        @keyframes follow-path {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(100px, 0) rotate(90deg); }
+            50% { transform: translate(100px, 100px) rotate(180deg); }
+            75% { transform: translate(0, 100px) rotate(270deg); }
+            100% { transform: translate(0, 0) rotate(360deg); }
+        }
+        .anim-final-move { animation: follow-path 4s infinite linear; }
+
+        /* Mini Simulations */
+        .sim-container { background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; position: relative; overflow: hidden; height: 60px; width: 100%; margin-top: 15px;}
+        .sim-box { position: absolute; background: #3b82f6; width: 20px; height: 20px; border-radius: 4px; }
+        @keyframes sim-move { 0% { left: 10%; } 50% { left: 80%; } 100% { left: 10%; } }
+        @keyframes sim-pulse-color { 0% { background: #fff; } 50% { background: #000; } 100% { background: #fff; } }
+        
+        .anim-sim-move { animation: sim-move 3s ease-in-out infinite; }
+        .anim-sim-color { animation: sim-pulse-color 4s infinite; }
+
+        /* Helpers */
+        .hidden-screen { display: none !important; }
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        /* Ordering Game Styles */
+        .order-item {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .order-item:active { transform: scale(0.98); }
+        .order-item.selected { border-color: var(--primary); box-shadow: 0 0 10px var(--primary); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+    </style>
+</head>
+<body class="antialiased flex flex-col items-center justify-center relative">
+    
+    <!-- Audio Elements -->
+    <audio id="snd-click" src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA" preload="auto"></audio>
+    <audio id="snd-success" src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA" preload="auto"></audio>
+    <audio id="snd-error" src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA" preload="auto"></audio>
+    <audio id="snd-unlock" src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA" preload="auto"></audio>
+
+    <!-- Audio Toggle -->
+    <button onclick="toggleAudio()" class="absolute top-4 right-4 text-cyan-400 hover:text-white z-50 p-2">
+        <i id="audio-icon" class="fas fa-volume-up text-xl cursor-pointer"></i>
+    </button>
+
+    <!-- SCREEN 1: START -->
+    <div id="screen-start" class="cyber-panel p-8 w-11/12 max-w-2xl text-center fade-in">
+        <img src="bilfen-logo.png" alt="Bilfen Logosu" class="h-16 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(0,240,255,0.6)]">
+        
+        <h1 class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 mb-2 title-font">
+            EV3 GÖREV ODASI
+        </h1>
+        <h2 class="text-xl md:text-2xl text-cyan-300 mb-6 title-font tracking-wider">Robotik Kodlama Macerası</h2>
+        
+        <p class="text-gray-300 mb-8 leading-relaxed">
+            "Dikkat! Merkez üssündeki robotun sistemleri tamamen devre dışı kaldı! 
+            Beş farklı görev odasındaki problemleri çöz, parçaları yeniden etkinleştir ve robotunu göreve hazır hâle getir!"
+        </p>
+
+        <div class="space-y-4 mb-8 text-left max-w-sm mx-auto">
+            <div>
+                <label class="block text-cyan-400 text-sm mb-1 title-font text-center">Öğrenci Adı</label>
+                <input type="text" id="input-name" class="w-full bg-slate-900 border border-cyan-800 rounded p-3 text-white text-center focus:outline-none focus:border-cyan-400" placeholder="Adını yaz...">
+            </div>
+        </div>
+
+        <button onclick="startGame()" class="cyber-button title-font font-bold py-4 px-12 rounded text-xl w-full md:w-auto">
+            GÖREVE BAŞLA <i class="fas fa-rocket ml-2"></i>
+        </button>
+    </div>
+
+    <!-- MAIN UI WRAPPER (Visible after start) -->
+    <div id="main-ui" class="hidden-screen w-full max-w-6xl h-screen flex flex-col p-4">
+        
+        <!-- Header / Progress -->
+        <header class="flex flex-wrap justify-between items-center bg-slate-900/80 border-b border-cyan-500/30 p-4 rounded-t-xl gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-cyan-900 border-2 border-cyan-400 flex items-center justify-center text-cyan-300 flex-shrink-0">
+                    <i class="fas fa-user-astronaut text-xl"></i>
+                </div>
+                <div class="hidden sm:block">
+                    <div id="display-name" class="font-bold text-cyan-400 title-font tracking-wide">Ajan Görev Başında</div>
+                    <div class="text-xs text-gray-400">EV3 Merkez Üssü</div>
+                </div>
+            </div>
+            
+            <div class="flex-1 max-w-md w-full mx-auto">
+                <div class="flex justify-between text-xs text-cyan-300 mb-1 title-font">
+                    <span>SİSTEM AKTİVASYONU</span>
+                    <span id="progress-text">0%</span>
+                </div>
+                <div class="h-3 w-full bg-slate-800 rounded-full overflow-hidden border border-cyan-900">
+                    <div id="progress-bar" class="h-full bg-gradient-to-r from-cyan-500 to-purple-500 transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="text-right flex-shrink-0">
+                <div class="text-xs text-purple-400 title-font">PUAN</div>
+                <div id="score-display" class="text-3xl font-bold text-purple-300 title-font" style="text-shadow: 0 0 10px rgba(189,0,255,0.5);">0</div>
+            </div>
+        </header>
+
+        <!-- Dynamic Content Area -->
+        <main class="flex-1 flex flex-col lg:flex-row gap-6 mt-4 relative min-h-[600px] overflow-hidden">
+            
+            <!-- Left: Robot Status Display -->
+            <div id="robot-display-panel" class="cyber-panel p-4 w-full lg:w-[35%] flex flex-col items-center justify-center relative flex-shrink-0">
+                <div class="scanner hidden" id="scanner"></div>
+                <h3 class="text-cyan-400 title-font mb-4 text-center z-10 text-lg border-b border-cyan-900 pb-2 w-full">ROBOT DURUMU</h3>
+                
+                <!-- SVG Robot -->
+                <div class="w-full max-w-[220px] aspect-square relative z-10 drop-shadow-2xl flex-1 flex items-center justify-center">
+                    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="w-full h-full max-h-full">
+                        <!-- Path line (Hidden until finale) -->
+                        <path id="part-track" d="M 50 100 A 50 20 0 1 1 150 100 A 50 20 0 1 1 50 100" fill="none" stroke="#333" stroke-width="8" class="robot-part" />
+                        
+                        <g id="robot-group">
+                            <!-- Grabber (Room 3) -->
+                            <g id="part-grabber" class="robot-part">
+                                <path d="M 60 70 L 40 40 L 50 30 Z" fill="#71717a" />
+                                <path d="M 140 70 L 160 40 L 150 30 Z" fill="#71717a" />
+                                <rect x="35" y="30" width="10" height="20" fill="#f59e0b" class="anim-light"/>
+                                <rect x="155" y="30" width="10" height="20" fill="#f59e0b" class="anim-light"/>
+                            </g>
+
+                            <!-- Wheels / Motors (Room 1) -->
+                            <g id="part-wheels" class="robot-part">
+                                <rect x="40" y="130" width="30" height="50" rx="5" fill="#1f2937" />
+                                <rect x="130" y="130" width="30" height="50" rx="5" fill="#1f2937" />
+                                <!-- Wheel details for spin animation effect -->
+                                <line x1="40" y1="155" x2="70" y2="155" stroke="#374151" stroke-width="4" />
+                                <line x1="130" y1="155" x2="160" y2="155" stroke="#374151" stroke-width="4" />
+                            </g>
+
+                            <!-- Color Sensor (Room 4) -->
+                            <g id="part-colorsensor" class="robot-part">
+                                <rect x="85" y="150" width="30" height="20" fill="#4b5563" />
+                                <!-- Red light beam -->
+                                <polygon points="100,170 80,195 120,195" fill="rgba(255, 0, 0, 0.4)" class="anim-light" />
+                            </g>
+
+                            <!-- Brain / Body (Always semi-visible, fully active at Room 5) -->
+                            <g id="part-brain" class="robot-part opacity-50 filter-none">
+                                <rect x="50" y="70" width="100" height="80" rx="10" fill="#e5e7eb" />
+                                <rect x="50" y="70" width="100" height="80" rx="10" fill="url(#metalGrad)" />
+                                <!-- Screen -->
+                                <rect x="65" y="85" width="70" height="45" fill="#111827" />
+                                <text id="screen-text" x="100" y="115" font-family="monospace" font-size="12" fill="#00ff66" text-anchor="middle" opacity="0">READY</text>
+                            </g>
+
+                            <!-- Ultrasonic Sensor (Room 2) -->
+                            <g id="part-ultrasonic" class="robot-part">
+                                <rect x="65" y="55" width="70" height="30" rx="15" fill="#d1d5db" />
+                                <circle cx="80" cy="70" r="10" fill="#ef4444" />
+                                <circle cx="120" cy="70" r="10" fill="#ef4444" />
+                                <!-- Radar waves -->
+                                <path d="M 80 50 Q 80 40 90 35 M 120 50 Q 120 40 110 35" fill="none" stroke="#00f0ff" stroke-width="2" class="anim-wave opacity-0" />
+                            </g>
+
+                            <defs>
+                                <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:rgba(255,255,255,0.2)" />
+                                    <stop offset="100%" style="stop-color:rgba(0,0,0,0.5)" />
+                                </linearGradient>
+                            </defs>
+                        </g>
+                    </svg>
+                </div>
+                
+                <div id="mini-sim" class="sim-container hidden">
+                    <!-- Dynamic mini sim added via JS -->
+                </div>
+
+                <div id="robot-status-text" class="mt-4 text-sm text-cyan-200 text-center min-h-[40px] px-2 w-full bg-slate-900/50 rounded py-2">
+                    Sistemler çevrimdışı.
+                </div>
+            </div>
+
+            <!-- Right: Interactive Panel -->
+            <div class="w-full lg:w-[65%] cyber-panel flex flex-col relative overflow-hidden">
+                
+                <!-- HUB VIEW -->
+                <div id="view-hub" class="flex-1 flex flex-col h-full fade-in p-6 overflow-y-auto">
+                    <h2 id="hub-title" class="text-2xl md:text-3xl text-white title-font mb-2 text-center">GÖREV SEÇİMİ</h2>
+                    <p id="hub-desc" class="text-gray-400 mb-6 text-center text-sm md:text-base">Sistemleri aktifleştirmek için sıradaki odaya gir.</p>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                        <!-- Room Cards generated by JS -->
+                    </div>
+                </div>
+
+                <!-- MISSION VIEW -->
+                <div id="view-mission" class="hidden-screen flex-1 flex flex-col h-full fade-in p-6">
+                    <div class="flex justify-between items-center border-b border-cyan-800 pb-3 mb-4 flex-shrink-0">
+                        <h2 id="mission-title" class="text-lg md:text-xl text-cyan-300 title-font font-bold">GÖREV ADI</h2>
+                        <span id="question-counter" class="bg-cyan-900 border border-cyan-500 text-cyan-100 px-3 py-1 rounded-full text-sm font-bold shadow-[0_0_10px_rgba(0,240,255,0.3)]">1 / 4</span>
+                    </div>
+
+                    <div id="question-container" class="flex-1 flex flex-col overflow-y-auto pr-2 mb-4">
+                        <!-- Question Text -->
+                        <div id="q-text" class="text-base md:text-lg text-white mb-6 leading-relaxed">Soru metni...</div>
+                        
+                        <!-- Question Content Area -->
+                        <div id="q-content" class="space-y-3 flex-1">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Action Area -->
+                    <div class="flex flex-col sm:flex-row justify-between items-center border-t border-cyan-800 pt-4 mt-auto gap-4 flex-shrink-0">
+                        <div id="feedback-msg" class="w-full sm:w-auto p-2 rounded text-center font-bold text-sm hidden flex-1"></div>
+                        <button id="btn-confirm" onclick="confirmAnswer()" class="cyber-button py-3 px-8 rounded title-font font-bold w-full sm:w-auto">ONAYLA</button>
+                        <button id="btn-next" onclick="nextQuestion()" class="hidden cyber-button py-3 px-8 rounded title-font font-bold w-full sm:w-auto">
+                            SONRAKİ <i class="fas fa-chevron-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ROOM REVIEW VIEW -->
+                <div id="view-review" class="hidden-screen flex-1 flex flex-col h-full fade-in p-6">
+                    <div class="border-b border-cyan-800 pb-3 mb-4 flex-shrink-0">
+                        <h2 class="text-xl md:text-2xl text-cyan-300 title-font font-bold"><i class="fas fa-clipboard-check mr-2"></i> GÖREV ÖZETİ</h2>
+                        <p class="text-gray-400 text-sm mt-1">Aşağıda çözdüğün problemlerin analizlerini inceleyebilirsin.</p>
+                    </div>
+                    
+                    <div id="review-content" class="flex-1 overflow-y-auto space-y-4 pr-2 mb-4">
+                        <!-- Injected by JS -->
+                    </div>
+
+                    <div class="border-t border-cyan-800 pt-4 mt-auto flex-shrink-0">
+                        <button onclick="completeRoom()" class="cyber-button py-3 px-8 rounded title-font font-bold w-full">
+                            SİSTEMİ AKTİFLEŞTİR VE ÇIK <i class="fas fa-power-off ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- SCREEN: FINAL RESULT -->
+    <div id="screen-result" class="hidden-screen cyber-panel p-8 w-11/12 max-w-4xl mx-auto flex flex-col items-center mt-6 mb-10 fade-in">
+        <h1 class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cyan-500 mb-2 title-font text-center">
+            GÖREV TAMAMLANDI!
+        </h1>
+        <p class="text-lg text-gray-300 mb-8 text-center max-w-2xl">
+            Harika iş çıkardın! Robotunun bütün sistemlerini yeniden etkinleştirdin. Artık bir robotik kodlama uzmanı olmaya bir adım daha yakınsın!
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-8">
+            <!-- Rank & Score -->
+            <div class="bg-slate-900 border border-purple-500/50 rounded-xl p-6 flex flex-col items-center justify-center text-center">
+                <div class="text-sm text-purple-300 title-font mb-2">BAŞARI SEVİYESİ</div>
+                <i id="rank-icon" class="fas fa-trophy text-6xl text-yellow-400 mb-4 drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]"></i>
+                <div id="rank-title" class="text-2xl font-bold text-white title-font mb-2">Robotik Uzmanı</div>
+                
+                <div class="mt-4 p-4 border border-cyan-800 rounded bg-cyan-950/30 w-full">
+                    <div class="text-xs text-cyan-400 mb-1">TOPLAM PUAN</div>
+                    <div id="final-score" class="text-4xl font-black text-cyan-300 title-font">100</div>
+                </div>
+            </div>
+
+            <!-- Stats Details -->
+            <div class="bg-slate-900 border border-cyan-500/50 rounded-xl p-6">
+                <h3 class="text-cyan-400 title-font mb-4 border-b border-cyan-900 pb-2">PERFORMANS ÖZETİ</h3>
+                <ul id="stats-list" class="space-y-3 text-sm mb-4">
+                    <!-- Populated by JS -->
+                </ul>
+                <div id="study-recommendations" class="mt-4 p-3 bg-cyan-950/20 border border-cyan-800 rounded text-gray-300 text-xs">
+                    <!-- Recommendations -->
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-4 w-full md:w-auto">
+            <button onclick="location.reload()" class="flex-1 md:flex-none border border-cyan-600 bg-transparent text-cyan-400 hover:bg-cyan-900 py-3 px-6 rounded font-bold transition">
+                <i class="fas fa-redo mr-2"></i> YENİDEN OYNA
+            </button>
+            <button onclick="location.reload()" class="flex-1 md:flex-none cyber-button py-3 px-6 rounded font-bold">
+                <i class="fas fa-home mr-2"></i> ANA MENÜ
+            </button>
+        </div>
+    </div>
+
+    <!-- Overlay Confetti Canvas -->
+    <canvas id="confetti" class="fixed top-0 left-0 w-full h-full pointer-events-none z-50 hidden"></canvas>
+
+    <!-- Application Logic -->
+    <script>
+        // --- GAME DATA ---
+        const ROOMS = [
+            {
+                id: 1,
+                title: "Görev Odası 1 - Motor Kontrol Merkezi",
+                desc: "Robotunun hareket sistemini yeniden etkinleştirmek için motor komutlarını analiz et, doğru algoritmaları oluştur ve hataları düzelt!",
+                partId: "part-wheels",
+                successMsg: "Motor Sistemi Aktif! Robotun artık hareket edebilir.",
+                simType: "wheels",
+                questions: [
+                    {
+                        q: "<b>SORU 1 – ROBOTUN HAREKETİNİ TAHMİN ET</b><br>EV3 robotuna aşağıdaki komut veriliyor:<br><br><div class='bg-slate-900 p-3 rounded mt-2 border border-slate-700 w-fit'><span class='ev3-block ev3-movement'>start moving at 50, 0 % speed</span></div><br>Robotun hareketinde nasıl bir değişiklik olur?",
+                        type: "mc",
+                        options: [
+                            "İki tekerlek aynı hızda dönerek robotu düz ilerletir.",
+                            "Bir tekerlek dönerken diğeri durur ve robot yön değiştirir.",
+                            "İki tekerlek ters yönlerde dönerek robotu geri götürür.",
+                            "Her iki motor da durur."
+                        ],
+                        answer: 1,
+                        explanation: "Hız değerleri 50 ve 0 olarak verilmiştir. Bir motor %50 hızla dönerken diğer motor çalışmaz, bu da robotun duran tekerlek etrafında yön değiştirmesini sağlar."
+                    },
+                    {
+                        q: "<b>SORU 2 – DOĞRU MOTOR HIZLARINI BELİRLE</b><br>Bir robotun önce düz ilerlemesi, ardından tekerleklerinden birini durdurarak yön değiştirmesi isteniyor.<br><br>Hangi iki komut sırasıyla kullanılmalıdır?",
+                        type: "mc",
+                        options: [
+                            "<span class='ev3-block ev3-movement block mb-1'>start moving at 50, 50 % speed</span> &rarr; <span class='ev3-block ev3-movement block mt-1'>start moving at 50, 0 % speed</span>",
+                            "<span class='ev3-block ev3-movement block mb-1'>start moving at 50, 0 % speed</span> &rarr; <span class='ev3-block ev3-movement block mt-1'>start moving at 50, 50 % speed</span>",
+                            "<span class='ev3-block ev3-movement block mb-1'>start moving at 50, -50 % speed</span> &rarr; <span class='ev3-block ev3-movement block mt-1'>start moving at 50, 50 % speed</span>",
+                            "<span class='ev3-block ev3-movement block mb-1'>stop moving</span> &rarr; <span class='ev3-block ev3-movement block mt-1'>start moving at 50, -50 % speed</span>"
+                        ],
+                        answer: 0,
+                        explanation: "Düz ilerlemek için her iki motor da aynı hızda (50, 50) olmalıdır. Ardından bir tekerleği durdurup yön değiştirmek için (50, 0) kullanılmalıdır."
+                    },
+                    {
+                        q: "<b>SORU 3 – MOTORUN DÖNÜŞ MİKTARINI HESAPLA</b><br>Bir motorun toplam iki tam tur dönmesi gerekiyor. EV3 Classroom uygulamasında dönüş miktarı derece (degrees) cinsinden girilecek.<br><br>Motor kaç derece döndürülmelidir?",
+                        type: "mc",
+                        options: [ "180°", "360°", "540°", "720°" ],
+                        answer: 3,
+                        explanation: "1 tam tur 360 derecedir. 2 tam tur için 360 x 2 = 720 derece girilmelidir."
+                    },
+                    {
+                        q: "<b>SORU 4 – ALGORİTMAYI DOĞRU SIRALA</b><br>Bir robotun C portuna bağlı motorunun %50 hızla çalışması, 2 saniye boyunca dönmesi ve ardından durması isteniyor.<br><br>Aşağıdaki komutları <b>doğru çalışma sırasına</b> yerleştirin.<br><span class='ev3-block ev3-event block w-fit mt-2'>when program starts</span>",
+                        type: "order",
+                        options: [
+                            "<span class='ev3-block ev3-motor'>C stop motor</span>",
+                            "<span class='ev3-block ev3-control'>wait 2 seconds</span>",
+                            "<span class='ev3-block ev3-motor'>C start motor at 50 % speed</span>"
+                        ],
+                        answer: [2, 1, 0],
+                        explanation: "Motor hareketi başlatılır (start), bekleme süresi boyunca çalışmaya devam eder (wait 2s) ve ardından durdurulur (stop)."
+                    },
+                    {
+                        q: "<b>SORU 5 – HATALI KODU DÜZELT</b><br>Bir öğrenci, robotun ileri hareket etmesini, 3 saniye sonra durmasını istiyor. Ancak aşağıdaki kodu oluşturuyor:<br><br><div class='bg-slate-900 p-3 rounded mt-2 border border-slate-700 w-fit'><span class='ev3-block ev3-event block'>when program starts</span><span class='ev3-block ev3-movement block'>start moving at 50, 50 % speed</span><span class='ev3-block ev3-movement block'>stop moving</span></div><br>Robotun istenen süre boyunca ilerleyememesinin nedeni nedir?",
+                        type: "mc",
+                        options: [
+                            "Motor hızlarının birbirine eşit olması.",
+                            "İleri hareket için negatif hız değerleri kullanılması gerekmesi.",
+                            "Başlatma ve durdurma komutları arasında bekleme süresinin bulunmaması.",
+                            "stop moving komutunun programın başında yer alması gerekmesi."
+                        ],
+                        answer: 2,
+                        explanation: "start moving komutu motorları başlatır ancak hemen altındaki stop moving motorları anında durdurur. Araya 'wait 3 seconds' bloğu eklenmelidir."
+                    }
+                ]
+            },
+            {
+                id: 2,
+                title: "Görev Odası 2 - Engel Dedektifi",
+                desc: "Ultrasonik sensör algoritmalarını yapılandır ve mantık hatalarını çöz.",
+                partId: "part-ultrasonic",
+                successMsg: "Ultrasonik dalgalar stabil! Sensör veri akışı sağlandı.",
+                simType: "ultrasonic",
+                questions: [
+                    {
+                        q: "<b>Algoritma Analizi:</b> Yandaki kod çalıştırıldığında robotun davranışı nasıl olur?<br><br><div class='bg-slate-900 p-3 rounded mt-2 border border-slate-700'><span class='ev3-block ev3-control'>forever</span><br>&nbsp;&nbsp;<span class='ev3-block ev3-movement'>start moving forward</span><br>&nbsp;&nbsp;<span class='ev3-block ev3-control'>wait until <span class='ev3-block ev3-sensor'>distance < 10 cm</span></span><br>&nbsp;&nbsp;<span class='ev3-block ev3-movement'>stop moving</span><br>&nbsp;&nbsp;<span class='ev3-block ev3-movement'>move backward for 1 rotations</span><br></div>",
+                        type: "mc",
+                        options: [
+                            "Sürekli geri gider.",
+                            "Engeli görene kadar ilerler, engeli görünce durur ve program biter.",
+                            "Engele 10cm kala durur, geri çekilir ve tekrar engele doğru gitmeye devam eder (Sürekli tekrarlar).",
+                            "Motorlar hiç çalışmaz."
+                        ],
+                        answer: 2,
+                        explanation: "Kod forever (sürekli tekrarla) döngüsü içindedir. İleri gider, engeli görünce durur, 1 tur geri gelir ve döngü başa dönüp tekrar ileri gitmeye başlar."
+                    },
+                    {
+                        q: "<b>Hata Ayıklama:</b> Robotun engelden 15 cm önce durması isteniyor ancak robot engele doğrudan çarpıyor. Koddaki koşul hatası nedir?<br><br><div class='bg-slate-900 p-3 rounded mt-2 border border-slate-700'><span class='ev3-block ev3-movement'>start moving forward</span><br><span class='ev3-block ev3-control'>wait until <span class='ev3-block ev3-sensor'>distance > 15 cm</span></span><br><span class='ev3-block ev3-movement'>stop moving</span></div>",
+                        type: "mc",
+                        options: [
+                            "Mesafe birimi inç olmalıdır.",
+                            "'>' (Büyüktür) işareti '<' (Küçüktür) yapılmalıdır.",
+                            "Sensör portu belirtilmemiştir.",
+                            "Motor hızları verilmemiştir."
+                        ],
+                        answer: 1,
+                        explanation: "Robot engele uzaktan yaklaşıyorsa mesafe azalır. Sensörün tepki vermesi için mesafenin 15'in 'altına düşmesini' beklemeliyiz (< 15)."
+                    },
+                    {
+                        q: "<b>Problem Çözme:</b> EV3 ekranında Ultrasonik sensörün okuduğu değer sürekli <b>255 cm</b> (veya sonsuz) görünmektedir. Bunun teknik nedeni ne <u>olamaz</u>?",
+                        type: "mc",
+                        options: [
+                            "Sensör kablosu takılı değildir.",
+                            "Engel, sensörün menzilinin (yaklaşık 2.5m) dışındadır.",
+                            "Sensör motora bağlanmıştır.",
+                            "Sensörün önündeki engel çok yakındır (3 cm'den az)."
+                        ],
+                        answer: 3,
+                        explanation: "Sensöre engel çok yaklaştığında ölçüm sıfıra yakın (veya hata) verir, maksimum sınır olan 255 değerini vermez. 255 genellikle sınır aşımı veya bağlantısızlıktır."
+                    },
+                    {
+                        q: "<b>Kod Oluşturma:</b> Labirent çözen robotun duvarı görüp güvenli şekilde 90 derece sağa dönmesini sağlayacak algoritmayı sıralayın.",
+                        type: "order",
+                        options: [
+                            "<span class='ev3-block ev3-movement'>start moving at 50, -50 % speed</span>",
+                            "<span class='ev3-block ev3-movement'>start moving forward</span>",
+                            "<span class='ev3-block ev3-control'>wait 0.5 seconds</span>",
+                            "<span class='ev3-block ev3-control'>wait until <span class='ev3-block ev3-sensor'>distance < 12 cm</span></span>"
+                        ],
+                        answer: [1, 3, 0, 2], 
+                        explanation: "İleri başla -> 12 cm'den az kalana kadar bekle (duvarı gör) -> Sağa dönmeye başla (50, -50) -> Dönüş için süre bekle."
+                    }
+                ]
+            },
+            {
+                id: 3,
+                title: "Görev Odası 3 - Yakala ve Bırak",
+                desc: "Orta motorları kullanarak hassas mekanik işlemleri gerçekleştir.",
+                partId: "part-grabber",
+                successMsg: "Kavrama mekanizması kalibre edildi. Operasyona hazır.",
+                simType: "grabber",
+                questions: [
+                    {
+                        q: "<b>Algoritma Analizi:</b> A portuna bağlı Orta Motor (Medium Motor) mekanik bir kola bağlıdır. Dişli oranı 1:1'dir. Aşağıdaki komut çalıştığında kol toplam kaç derece hareket etmiş olur?<br><br><div class='bg-slate-900 p-3 rounded mt-2 border border-slate-700'><span class='ev3-block ev3-motor'>run motor A for 2.5 rotations</span></div>",
+                        type: "mc",
+                        options: ["250 derece", "360 derece", "900 derece", "2.5 derece"],
+                        answer: 2,
+                        explanation: "1 tur (rotation) 360 derecedir. 2.5 tur x 360 = 900 derece yapar."
+                    },
+                    {
+                        q: "<b>Hata Ayıklama:</b> Robot küpü tutmak için kolunu kapatıyor ancak kapattıktan sonra motor 'tık tık' ses çıkararak zorlanıyor. Bu mekanik sıkışmayı (stall) önlemek için hatalı olan komut yerine ne kullanılmalıdır?<br>Hatalı: <span class='ev3-block ev3-control'>forever</span> { <span class='ev3-block ev3-motor'>run motor A clockwise</span> }",
+                        type: "mc",
+                        options: [
+                            "<span class='ev3-block ev3-motor'>run motor A for 0.5 seconds</span> gibi sınırlı bir komut kullanılmalıdır.",
+                            "Motor daha hızlı çalıştırılmalıdır.",
+                            "<span class='ev3-block ev3-movement'>move forward</span> kullanılmalıdır.",
+                            "Dişliler sökülmelidir."
+                        ],
+                        answer: 0,
+                        explanation: "Kavrama işlemi sonsuz döndürme (forever) ile değil, mekaniğin limitlerine uygun kısıtlı açılar veya saniyeler (for X seconds/degrees) kullanılarak yapılmalıdır."
+                    },
+                    {
+                        q: "<b>Problem Çözme:</b> Program her başladığında kolun açık mı yoksa kapalı mı olduğunu bilemiyoruz. Başlangıçta kolu kesin olarak 'Açık' duruma getirecek (kalibre edecek) <b>en güvenli</b> yöntem nedir?",
+                        type: "mc",
+                        options: [
+                            "Kolu manuel olarak elle açmak.",
+                            "Motoru düşük güçte 1 saniye geri çalıştırıp fiziksel engele dayanmasını sağlamak ve sıfırlamak.",
+                            "Motoru ileri yönde 5 tur döndürmek.",
+                            "Renk sensörü ile kolu izlemek."
+                        ],
+                        answer: 1,
+                        explanation: "Endüstriyel robotlarda olduğu gibi, motoru yavaşça fiziksel bir limite dayanana kadar (hard stop) çalıştırıp pozisyonu sıfırlamak en güvenli yazılımsal kalibrasyondur."
+                    },
+                    {
+                        q: "<b>Kod Oluşturma:</b> Önündeki engeli alıp, 1 tur geriye taşıyacak robotun güvenli algoritmasını sıralayın.",
+                        type: "order",
+                        options: [
+                            "<span class='ev3-block ev3-motor'>run motor A for 100 degrees</span> (Kapat)",
+                            "<span class='ev3-block ev3-motor'>run motor A for -100 degrees</span> (Aç)",
+                            "<span class='ev3-block ev3-control'>wait 0.5 seconds</span>",
+                            "<span class='ev3-block ev3-movement'>move backward for 1 rotations</span>"
+                        ],
+                        answer: [1, 0, 2, 3],
+                        explanation: "Küpü ezmemek için önce kolu AÇ (-100 deg), ardından nesneyi KAPATARAK kavra (100 deg), stabilite için BEKLE ve GERİ git."
+                    }
+                ]
+            },
+            {
+                id: 4,
+                title: "Görev Odası 4 - Renk Laboratuvarı",
+                desc: "Robotunun renk sensörü doğru ölçüm yapmıyor! Sensörün çalışma prensibini analiz et, kalibrasyon hatalarını belirle ve renk algılama sistemini yeniden etkinleştir!",
+                partId: "part-colorsensor",
+                successMsg: "Renk Sensörü Aktif! Robotun artık yüzeylerdeki renk ve yansıma farklılıklarını algılayabilir.",
+                simType: "color",
+                questions: [
+                    {
+                        q: "<b>SORU 1 – DOĞRU SENSÖR MODUNU SEÇ</b><br>Bir öğrenci EV3 renk sensörünü iki farklı görev için kullanmak istiyor:<br><b>1. Görev:</b> Robot siyah rengi algıladığında dursun.<br><b>2. Görev:</b> Robot, siyah çizgi ile beyaz zemin arasındaki yansıma farkını ölçerek çizginin kenarını takip etsin.<br><br>Bu görevler için <b>sırasıyla</b> hangi sensör modları tercih edilmelidir?",
+                        type: "mc",
+                        options: [
+                            "Color Mode &rarr; Reflected Light Intensity Mode",
+                            "Reflected Light Intensity Mode &rarr; Color Mode",
+                            "Color Mode &rarr; Color Mode",
+                            "Ambient Light Intensity Mode &rarr; Ambient Light Intensity Mode"
+                        ],
+                        answer: 0,
+                        explanation: "Belirli bir rengi tanımak için Color Mode, yüzeyin parlaklık/yansıma farkını orantısal olarak ölçmek (çizgi izlemek) için Reflected Light Intensity modu kullanılır."
+                    },
+                    {
+                        q: "<b>SORU 2 – KALİBRASYON KOMUTLARINI EŞLEŞTİR</b><br>EV3 robotunun renk sensörü 3 numaralı porta bağlıdır. Öğrenci, sensörün ölçümlerini kalibre etmek istiyor.<br><br>Aşağıdaki işlemleri sırasıyla <b>(1) Yukarı Butonu, (2) Aşağı Butonu, (3) Orta Buton</b>'a karşılık gelecek şekilde seçerek eşleştirin.",
+                        type: "order",
+                        options: [
+                            "Siyah çizgi üzerindeki ölçümü minimum referans olarak kaydet.",
+                            "Kalibrasyon ayarlarını sıfırla.",
+                            "Beyaz zemin üzerindeki ölçümü maksimum referans olarak kaydet."
+                        ],
+                        answer: [2, 0, 1],
+                        explanation: "Yukarı buton = Maksimum (Beyaz Zemin). Aşağı buton = Minimum (Siyah Çizgi). Orta buton = Sıfırla."
+                    },
+                    {
+                        q: "<b>SORU 3 – KALİBRASYON HATASINI BUL</b><br>Bir öğrenci, renk sensörünü kalibre ederken aşağıdaki işlemleri gerçekleştiriyor:<br><br><b>İşlem 1:</b> Sensörü <u>siyah çizginin üzerine</u> yerleştiriyor ve <span class='ev3-block ev3-sensor'>calibrate reflected light intensity maximum</span> komutunu çalıştırıyor.<br><b>İşlem 2:</b> Sensörü <u>beyaz zemine</u> yerleştiriyor ve <span class='ev3-block ev3-sensor'>calibrate reflected light intensity minimum</span> komutunu çalıştırıyor.<br><br>Öğrencinin yaptığı hata nedir?",
+                        type: "mc",
+                        options: [
+                            "Maksimum ve minimum kalibrasyon işlemleri için aynı yüzey kullanılmıştır.",
+                            "Maksimum ve minimum kalibrasyon için kullanılan yüzeyler ters seçilmiştir.",
+                            "Renk sensörü mutlaka başka bir porta bağlanmalıdır.",
+                            "Kalibrasyon yapılmadan önce motorların çalıştırılması gerekir."
+                        ],
+                        answer: 1,
+                        explanation: "Maksimum kalibrasyon ışığı en çok yansıtan yüzeyde (beyaz), minimum kalibrasyon ise ışığı en az yansıtan yüzeyde (siyah) yapılmalıdır."
+                    },
+                    {
+                        q: "<b>SORU 4 – UYGUN EŞİK DEĞERİNİ BELİRLE</b><br>Bir robotun renk sensörü aynı parkur üzerinde ölçüm yapıyor:<br><table class='w-full mt-2 mb-2 text-sm text-left border-collapse'><tr class='bg-slate-700'><th>Ölçüm</th><th>Siyah çizgi</th><th>Beyaz zemin</th></tr><tr><td>1</td><td>%18</td><td>%67</td></tr><tr class='bg-slate-800'><td>2</td><td>%24</td><td>%74</td></tr><tr><td>3</td><td>%29</td><td>%81</td></tr></table>Öğrenci şu koşulu kullanarak yüzeyleri ayırmak istiyor:<br><span class='ev3-block ev3-control'>if reflected light intensity < EŞİK DEĞERİ</span><br><br>Hangi eşik değeri, verilen altı ölçümün tamamını doğru şekilde ayırır?",
+                        type: "mc",
+                        options: [ "%15", "%45", "%70", "%90" ],
+                        answer: 1,
+                        explanation: "Siyahın en yüksek değeri 29, beyazın en düşük değeri 67'dir. İkisini de güvenle ayırabilen değer 45'tir. (Örn: 45'ten küçükler siyahtır, büyükler beyazdır)."
+                    },
+                    {
+                        q: "<b>SORU 5 – SENSÖRÜN ÖLÇÜMLERİNİ İYİLEŞTİR</b><br>Bir sınıfın sensör kalibrasyonu, farklı aydınlatmaya sahip ve sensör yüksekliğinin değiştiği yeni bir ortama taşınıyor. Yeni değerler Siyah: %42, Beyaz: %57 oluyor ve robot kararsızlaşıyor.<br><br>Öğrenciler sorunu çözmek için öncelikle hangi işlemi yapmalıdır?",
+                        type: "mc",
+                        options: [
+                            "Sensör yüksekliğini sabitleyip yeni ortamda kalibrasyon ve ölçüm testlerini tekrarlamalıdır.",
+                            "Renk sensörünü çıkarıp yalnızca motorların hızını artırmalıdır.",
+                            "Siyah ve beyaz yüzeyleri yeniden ölçmeden eşik değerini daima %90 yapmalıdır.",
+                            "Sensör bağlantısı doğru çalıştığı hâlde renk sensörünü ultrasonik sensörle değiştirmelidir."
+                        ],
+                        answer: 0,
+                        explanation: "Işık şartları veya mesafe değiştiğinde yansıma değerleri doğrudan etkilenir. Fiziksel şartlar (yükseklik) sabitlenmeli ve yeni ortama göre yeniden kalibrasyon yapılmalıdır."
+                    }
+                ]
+            },
+            {
+                id: 5,
+                title: "Görev Odası 5 - Çizgi İzleme Finali",
+                desc: "Robotunun bütün sistemleri neredeyse hazır! Son aşamada renk sensöründen alınan verileri motor hareketlerine dönüştürmeli, hatalı algoritmaları düzeltmeli ve robotun çizgiyi kesintisiz takip etmesini sağlamalısın.",
+                partId: "part-brain",
+                successMsg: "GÖREV TAMAMLANDI! Robotunun bütün sistemleri başarıyla etkinleştirildi.",
+                simType: "line",
+                questions: [
+                    {
+                        q: "<b>SORU 1 – ROBOTUN KARARLARINI TAHMİN ET</b><br>Robotun renk sensörü art arda şu üç ölçümü yapıyor: <b>%24, %50, %76.</b><br>Programdaki koşul şöyledir:<br><div class='bg-slate-900 p-2 rounded mt-2 w-fit border border-slate-700'><span class='ev3-block ev3-control block'>if <span class='ev3-block ev3-sensor'>3 is reflected light intensity < 50 %</span> then</span><span class='ev3-block ev3-movement ml-4 block'>start moving at 50, 0 % speed</span><span class='ev3-block ev3-control block'>else</span><span class='ev3-block ev3-movement ml-4 block'>start moving at 0, 50 % speed</span></div><br>Robot bu ölçümlerde sırasıyla hangi motor komutlarını uygular?",
+                        type: "mc",
+                        options: [
+                            "(50, 0) &rarr; (0, 50) &rarr; (0, 50)",
+                            "(50, 0) &rarr; (50, 0) &rarr; (0, 50)",
+                            "(0, 50) &rarr; (50, 0) &rarr; (50, 0)",
+                            "(0, 50) &rarr; (0, 50) &rarr; (50, 0)"
+                        ],
+                        answer: 0,
+                        explanation: "%24 < 50 koşulunu sağlar, 'then' (50,0) çalışır. %50 < 50 koşulunu SAĞLAMAZ, 'else' (0,50) çalışır. %76 < 50 koşulunu sağlamaz, 'else' (0,50) çalışır."
+                    },
+                    {
+                        q: "<b>SORU 2 – ÇİZGİ İZLEME ALGORİTMASINI TAMAMLA</b><br>Bir EV3 robotunun çizgiyi kesintisiz takip etmesi isteniyor.<br>Başlangıç bloğu hazırdır:<br><span class='ev3-block ev3-event block w-fit mt-2 mb-2'>when right button pressed</span>Aşağıdaki dört kod parçasını, dıştaki yapıdan içteki yapıya doğru (örneğin: döngü &rarr; koşul &rarr; iç işlemler) <b>doğru akış sırasıyla</b> yerleştirin.",
+                        type: "order",
+                        options: [
+                            "<span class='ev3-block ev3-movement block'>start moving at 0, 50 % speed</span>",
+                            "<span class='ev3-block ev3-control block'>if <span class='ev3-block ev3-sensor'>3 is reflected light intensity < 50 %</span> then / else</span>",
+                            "<span class='ev3-block ev3-control block'>forever</span>",
+                            "<span class='ev3-block ev3-movement block'>start moving at 50, 0 % speed</span>"
+                        ],
+                        answer: [2, 1, 3, 0],
+                        explanation: "Sıralama: Sonsuz döngü (forever) > Koşul (if/else) > If içi (50, 0) > Else içi (0, 50) olmalıdır."
+                    },
+                    {
+                        q: "<b>SORU 3 – EKSİK DÖNGÜYÜ BELİRLE</b><br>Bir öğrenci aşağıdaki algoritmayı oluşturuyor:<br><div class='bg-slate-900 p-2 rounded mt-2 w-fit border border-slate-700'><span class='ev3-block ev3-event block'>when right button pressed</span><span class='ev3-block ev3-control block'>if <span class='ev3-block ev3-sensor'>3 is reflected light intensity < 50 %</span> then</span><span class='ev3-block ev3-movement ml-4 block'>start moving at 50, 0 % speed</span><span class='ev3-block ev3-control block'>else</span><span class='ev3-block ev3-movement ml-4 block'>start moving at 0, 50 % speed</span></div><br>Ancak robot siyah çizgi ile beyaz zemin arasında ilerlerken yönünü sürekli güncelleyemiyor. Bunun temel nedeni nedir?",
+                        type: "mc",
+                        options: [
+                            "Motor hızlarından birinin sıfır olması.",
+                            "Koşulun sürekli tekrarlanmasını sağlayan forever döngüsünün bulunmaması.",
+                            "Renk sensörünün yalnızca beyaz yüzeyleri algılayabilmesi.",
+                            "Koşul bloğunun mutlaka programın en sonunda bulunması gerekmesi."
+                        ],
+                        answer: 1,
+                        explanation: "Forever döngüsü olmazsa koşul sadece 1 kez kontrol edilir ve robot ilk karara göre sonsuza dek aynı yönde hareket eder."
+                    },
+                    {
+                        q: "<b>SORU 4 – YANLIŞ KOŞULU DÜZELT</b><br>Robotun siyah çizgide motorlarını (50, 0), beyaz zeminde ise (0, 50) hızlarıyla çalıştırması isteniyor. Öğrenci aşağıdaki koşulu kullanıyor:<br><div class='bg-slate-900 p-2 rounded mt-2 w-fit border border-slate-700'><span class='ev3-block ev3-control block'>if <span class='ev3-block ev3-sensor'>reflected light intensity > 50 %</span> then</span><span class='ev3-block ev3-movement ml-4 block'>start moving at 50, 0 % speed</span><span class='ev3-block ev3-control block'>else</span><span class='ev3-block ev3-movement ml-4 block'>start moving at 0, 50 % speed</span></div><br>Siyah %25, beyaz %75'tir. Robotun istenen davranışı gerçekleştirmesi için hangi değişiklik yapılmalıdır?",
+                        type: "mc",
+                        options: [
+                            "> karşılaştırma operatörü < olarak değiştirilmelidir.",
+                            "forever döngüsü kaldırılmalıdır.",
+                            "Eşik değeri %100 yapılmalıdır.",
+                            "Her iki motor hızı da sıfırlanmalıdır."
+                        ],
+                        answer: 0,
+                        explanation: "Mevcut > (büyüktür) koşuluna göre robot beyaza (%75) gelince 'if' çalışır ve yanlış hamleyi (50,0) yapar. Siyaha gelince de 'else' çalışır. < (küçüktür) yapılarak mantık düzeltilir."
+                    },
+                    {
+                        q: "<b>SORU 5 – PARKUR PERFORMANSINI İYİLEŞTİR</b><br>Robot düz bölümlerde başarılı şekilde ilerliyor ancak keskin dönüşlerde zaman zaman çizgiden çıkıyor.<br>Öğrenci, motor hızının bu soruna etkisini diğer değişkenlerden bağımsız olarak test etmek istiyor.<br><br>Hangi denemeyi yapmalıdır?",
+                        type: "mc",
+                        options: [
+                            "Motor hızlarını (25, 0) ve (0, 25) olarak değiştirip eşik değerini ve sensör konumunu sabit tutarak aynı parkurda yeniden test etmelidir.",
+                            "Motor hızlarını düşürürken eşik değerini de %70'e değiştirmelidir.",
+                            "Eşik değerini ve sensörün yüksekliğini aynı anda değiştirerek farklı bir zeminde deneme yapmalıdır.",
+                            "Ölçüm sonuçlarını dikkate almadan motor hızlarını %100'e çıkarmalıdır."
+                        ],
+                        answer: 0,
+                        explanation: "Bilimsel bir deneyde sadece bir bağımsız değişken (motor hızı) değiştirilir, diğer tüm şartlar sabit tutularak sonuç gözlemlenir."
+                    }
+                ]
+            }
+        ];
+
+        // --- STATE ---
+        let state = {
+            currentRoomIndex: 0,
+            currentQuestionIndex: 0,
+            score: 0,
+            roomScores: [0, 0, 0, 0, 0],
+            roomResults: [], // stores results for current room review
+            allResults: [],  // stores all results for final screen
+            questionLocked: false,
+            selectedAnswer: null,
+            audioEnabled: true
+        };
+
+        let tempOrderSelection = []; 
+
+        // --- AUDIO SYSTEM ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(freq, type, duration, vol=0.1) {
+            if (!state.audioEnabled) return;
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        const playSound = {
+            click: () => playTone(600, 'sine', 0.1),
+            success: () => { playTone(400, 'sine', 0.1); setTimeout(() => playTone(600, 'sine', 0.2), 100); },
+            error: () => playTone(200, 'sawtooth', 0.3),
+            unlock: () => { 
+                playTone(300, 'square', 0.1); 
+                setTimeout(() => playTone(400, 'square', 0.1), 100); 
+                setTimeout(() => playTone(500, 'square', 0.3), 200); 
+            },
+            select: () => playTone(800, 'triangle', 0.05)
+        };
+
+        function toggleAudio() {
+            state.audioEnabled = !state.audioEnabled;
+            const icon = document.getElementById('audio-icon');
+            icon.className = state.audioEnabled ? 'fas fa-volume-up text-xl cursor-pointer' : 'fas fa-volume-mute text-xl cursor-pointer text-gray-500';
+        }
+
+        // --- INIT ---
+        function startGame() {
+            const nameInput = document.getElementById('input-name').value.trim();
+            const displayName = nameInput ? `${nameInput} Görev Başında` : "Ajan Görev Başında";
+            document.getElementById('display-name').innerText = displayName;
+
+            playSound.unlock();
+            document.getElementById('screen-start').classList.add('hidden-screen');
+            document.getElementById('main-ui').classList.remove('hidden-screen');
+            
+            renderHub();
+        }
+
+        // --- HUB ---
+        function renderHub() {
+            const hubContainer = document.querySelector('#view-hub .grid');
+            hubContainer.innerHTML = '';
+            
+            ROOMS.forEach((room, index) => {
+                const isLocked = index > state.currentRoomIndex;
+                const isCompleted = index < state.currentRoomIndex;
+                const isCurrent = index === state.currentRoomIndex;
+
+                let statusClass = "border-gray-700 opacity-50";
+                let iconClass = "fa-lock text-gray-500";
+                let btnAction = "";
+                
+                if (isCompleted) {
+                    statusClass = "border-success bg-green-900/20";
+                    iconClass = "fa-check-circle text-success";
+                } else if (isCurrent) {
+                    statusClass = "border-primary bg-cyan-900/20 shadow-[0_0_15px_rgba(0,240,255,0.2)]";
+                    iconClass = "fa-door-open text-primary animate-pulse";
+                    btnAction = `onclick="enterRoom(${index})"`;
+                }
+
+                const card = `
+                    <div class="cyber-panel p-5 flex flex-col items-center text-center ${statusClass} transition transform ${isCurrent ? 'hover:scale-105 cursor-pointer' : ''}" ${btnAction}>
+                        <i class="fas ${iconClass} text-3xl mb-3"></i>
+                        <h4 class="text-white font-bold title-font mb-2">${room.title}</h4>
+                        <p class="text-xs text-gray-400 mb-4 h-12 overflow-hidden">${isLocked ? 'Kilitli. Önceki görevleri tamamla.' : room.desc}</p>
+                        ${isCurrent ? '<button class="cyber-button text-xs py-2 px-4 rounded w-full mt-auto">GİRİŞ YAP</button>' : ''}
+                        ${isCompleted ? `<div class="text-success text-xs font-bold w-full p-2 border border-success rounded mt-auto">TAMAMLANDI (${state.roomScores[index]}/20)</div>` : ''}
+                    </div>
+                `;
+                hubContainer.innerHTML += card;
+            });
+
+            document.getElementById('view-hub').classList.remove('hidden-screen');
+            document.getElementById('view-mission').classList.add('hidden-screen');
+            document.getElementById('view-review').classList.add('hidden-screen');
+            
+            updateProgress();
+        }
+
+        // --- MISSION ROOM ---
+        function enterRoom(index) {
+            playSound.click();
+            state.currentRoomIndex = index;
+            state.currentQuestionIndex = 0;
+            state.roomResults = [];
+            
+            const room = ROOMS[state.currentRoomIndex];
+            document.getElementById('mission-title').innerHTML = `<i class="fas fa-microchip mr-2 text-purple-400"></i> ${room.title}`;
+            
+            const scanner = document.getElementById('scanner');
+            scanner.classList.remove('hidden');
+            setTimeout(() => scanner.classList.add('hidden'), 2000);
+            
+            document.getElementById('robot-status-text').innerHTML = `
+                <span class="text-cyan-400 font-bold">ANALİZ EDİLİYOR...</span><br>
+                Hedef Sistem: ${room.title.split('-')[1].trim()}
+            `;
+
+            updateMiniSim(room.simType);
+
+            document.getElementById('view-hub').classList.add('hidden-screen');
+            document.getElementById('view-mission').classList.remove('hidden-screen');
+            
+            loadQuestion();
+        }
+
+        function updateMiniSim(type) {
+            const sim = document.getElementById('mini-sim');
+            sim.classList.remove('hidden');
+            sim.innerHTML = '';
+            
+            if(type === 'wheels') {
+                sim.innerHTML = `<div class="flex justify-around items-center h-full w-full">
+                    <i class="fas fa-cog text-3xl text-cyan-400 animate-spin"></i>
+                    <i class="fas fa-cog text-3xl text-cyan-400 animate-spin" style="animation-direction: reverse;"></i>
+                </div>`;
+            } else if(type === 'ultrasonic') {
+                sim.innerHTML = `<div class="flex items-center h-full w-full px-4 relative">
+                    <i class="fas fa-wifi text-xl text-cyan-400 rotate-90"></i>
+                    <div class="sim-box anim-sim-move bg-red-500"></div>
+                </div>`;
+            } else if (type === 'grabber') {
+                sim.innerHTML = `<div class="flex justify-center items-center h-full w-full gap-2">
+                    <div class="w-2 h-10 bg-gray-400 transform rotate-12 transition-transform duration-1000 origin-bottom" id="claw1"></div>
+                    <div class="w-8 h-8 bg-yellow-500 rounded-sm"></div>
+                    <div class="w-2 h-10 bg-gray-400 transform -rotate-12 transition-transform duration-1000 origin-bottom" id="claw2"></div>
+                </div>`;
+                setInterval(() => {
+                    const c1 = document.getElementById('claw1'); const c2 = document.getElementById('claw2');
+                    if(c1) { c1.classList.toggle('rotate-12'); c1.classList.toggle('-rotate-12'); }
+                    if(c2) { c2.classList.toggle('-rotate-12'); c2.classList.toggle('rotate-12'); }
+                }, 1000);
+            } else if (type === 'color') {
+                sim.innerHTML = `<div class="flex justify-center items-center h-full w-full anim-sim-color">
+                    <i class="fas fa-eye text-2xl text-red-500 drop-shadow-[0_0_5px_red]"></i>
+                </div>`;
+            } else if (type === 'line') {
+                sim.innerHTML = `<div class="h-full w-full bg-white relative overflow-hidden flex items-center">
+                    <div class="w-full h-4 bg-black absolute top-1/2 transform -translate-y-1/2"></div>
+                    <div class="w-6 h-6 rounded-full bg-cyan-500 absolute border-2 border-slate-900 z-10 left-1/2 anim-sim-move" style="animation-duration: 2s;"></div>
+                </div>`;
+            }
+        }
+
+        function loadQuestion() {
+            const room = ROOMS[state.currentRoomIndex];
+            const qData = room.questions[state.currentQuestionIndex];
+            
+            state.questionLocked = false;
+            state.selectedAnswer = null;
+            
+            document.getElementById('question-counter').innerText = `${state.currentQuestionIndex + 1} / ${room.questions.length}`;
+            document.getElementById('q-text').innerHTML = qData.q;
+            
+            const btnConfirm = document.getElementById('btn-confirm');
+            btnConfirm.classList.remove('hidden');
+            btnConfirm.classList.add('opacity-50', 'cursor-not-allowed');
+            document.getElementById('btn-next').classList.add('hidden');
+            
+            const feedback = document.getElementById('feedback-msg');
+            feedback.classList.add('hidden');
+
+            const content = document.getElementById('q-content');
+            content.innerHTML = '';
+            
+            if (qData.type === 'mc') {
+                qData.options.forEach((opt, i) => {
+                    const btn = document.createElement('button');
+                    btn.className = "opt-btn w-full text-left bg-slate-800 border border-slate-600 hover:border-cyan-400 text-gray-200 p-4 rounded transition duration-200";
+                    btn.innerHTML = `<span class="inline-block w-6 text-cyan-400 font-bold mr-2">${String.fromCharCode(65+i)})</span> ${opt}`;
+                    btn.onclick = () => selectMcOption(i, btn);
+                    content.appendChild(btn);
+                });
+            } else if (qData.type === 'order') {
+                tempOrderSelection = [];
+                const instruction = document.createElement('div');
+                instruction.className = "text-sm text-cyan-300 mb-2 font-bold bg-cyan-900/30 p-2 rounded border border-cyan-800";
+                instruction.innerHTML = "<i class='fas fa-info-circle'></i> Blokları sıraya dizmek için tıklayın.";
+                content.appendChild(instruction);
+                
+                const list = document.createElement('div');
+                list.className = "space-y-2";
+                
+                let displayOptions = qData.options.map((opt, i) => ({html: opt, originalIndex: i}));
+                displayOptions.sort(() => Math.random() - 0.5);
+                
+                displayOptions.forEach((opt) => {
+                    const item = document.createElement('div');
+                    item.className = "order-item bg-slate-800 border border-slate-600 p-3 rounded text-gray-200 flex items-center justify-between cursor-pointer hover:border-cyan-400 transition";
+                    item.innerHTML = `<span>${opt.html}</span> <span class="badge text-xs font-bold w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center shrink-0 ml-2"></span>`;
+                    
+                    item.onclick = () => {
+                        if(state.questionLocked) return;
+                        playSound.select();
+                        const idx = tempOrderSelection.indexOf(opt.originalIndex);
+                        if (idx > -1) {
+                            tempOrderSelection.splice(idx, 1);
+                            item.classList.remove('border-primary');
+                            item.querySelector('.badge').innerText = "";
+                            item.querySelector('.badge').classList.replace('bg-primary', 'bg-slate-700');
+                        } else {
+                            tempOrderSelection.push(opt.originalIndex);
+                            item.classList.add('border-primary');
+                            item.querySelector('.badge').innerText = tempOrderSelection.length;
+                            item.querySelector('.badge').classList.replace('bg-slate-700', 'bg-primary');
+                        }
+                        
+                        updateOrderBadges();
+                        
+                        if(tempOrderSelection.length === qData.options.length) {
+                            state.selectedAnswer = [...tempOrderSelection];
+                            document.getElementById('btn-confirm').classList.remove('opacity-50', 'cursor-not-allowed');
+                        } else {
+                            state.selectedAnswer = null;
+                            document.getElementById('btn-confirm').classList.add('opacity-50', 'cursor-not-allowed');
+                        }
+                    };
+                    list.appendChild(item);
+                });
+                content.appendChild(list);
+            }
+        }
+
+        function updateOrderBadges() {
+            const items = document.querySelectorAll('.order-item');
+            items.forEach((item) => {
+                const badge = item.querySelector('.badge');
+                if(badge.innerText !== "") {
+                    // Refresh number based on current array order if needed, but simple array match works here since we update on click.
+                    // To handle unselecting middle elements gracefully:
+                    const htmlContent = item.querySelector('span').innerHTML;
+                    const room = ROOMS[state.currentRoomIndex];
+                    const qData = room.questions[state.currentQuestionIndex];
+                    const origIdx = qData.options.findIndex(opt => opt === htmlContent);
+                    const pos = tempOrderSelection.indexOf(origIdx);
+                    if(pos > -1) {
+                        badge.innerText = pos + 1;
+                    }
+                }
+            });
+        }
+
+        function selectMcOption(index, btnElement) {
+            if(state.questionLocked) return;
+            playSound.select();
+            state.selectedAnswer = index;
+            
+            document.querySelectorAll('.opt-btn').forEach(b => {
+                b.classList.replace('border-cyan-400', 'border-slate-600');
+                b.classList.remove('bg-cyan-900/30');
+            });
+            btnElement.classList.replace('border-slate-600', 'border-cyan-400');
+            btnElement.classList.add('bg-cyan-900/30');
+            
+            document.getElementById('btn-confirm').classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        function confirmAnswer() {
+            if(state.questionLocked || state.selectedAnswer === null) return;
+            
+            state.questionLocked = true;
+            const room = ROOMS[state.currentRoomIndex];
+            const qData = room.questions[state.currentQuestionIndex];
+            
+            let isCorrect = false;
+            if (qData.type === 'mc') {
+                isCorrect = (state.selectedAnswer === qData.answer);
+            } else if (qData.type === 'order') {
+                isCorrect = JSON.stringify(state.selectedAnswer) === JSON.stringify(qData.answer);
+            }
+
+            // Save result for review
+            state.roomResults.push({
+                q: qData.q,
+                type: qData.type,
+                options: qData.options,
+                answer: qData.answer,
+                userAns: state.selectedAnswer,
+                correct: isCorrect,
+                exp: qData.explanation
+            });
+            state.allResults.push(state.roomResults[state.roomResults.length-1]);
+
+            const feedback = document.getElementById('feedback-msg');
+            feedback.classList.remove('hidden');
+
+            if (isCorrect) {
+                playSound.success();
+                const pts = (room.questions.length === 5) ? 4 : 5;
+                state.score += pts;
+                state.roomScores[state.currentRoomIndex] += pts;
+                feedback.className = "w-full sm:w-auto p-3 rounded border text-center font-bold text-sm bg-green-900/30 border-green-500 text-green-400 flex-1";
+                feedback.innerHTML = "<i class='fas fa-check-circle text-lg mr-2'></i> Cevap Kaydedildi (Doğru)";
+            } else {
+                playSound.error();
+                feedback.className = "w-full sm:w-auto p-3 rounded border text-center font-bold text-sm bg-red-900/30 border-red-500 text-red-400 flex-1";
+                feedback.innerHTML = "<i class='fas fa-times-circle text-lg mr-2'></i> Cevap Kaydedildi (Yanlış)";
+            }
+
+            updateProgress();
+            
+            document.getElementById('btn-confirm').classList.add('hidden');
+            document.getElementById('btn-next').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            playSound.click();
+            const room = ROOMS[state.currentRoomIndex];
+            
+            if (state.currentQuestionIndex < room.questions.length - 1) {
+                state.currentQuestionIndex++;
+                loadQuestion();
+            } else {
+                showRoomReview();
+            }
+        }
+
+        function showRoomReview() {
+            playSound.click();
+            document.getElementById('view-mission').classList.add('hidden-screen');
+            document.getElementById('view-review').classList.remove('hidden-screen');
+            
+            const container = document.getElementById('review-content');
+            container.innerHTML = '';
+            
+            state.roomResults.forEach((res, i) => {
+                const icon = res.correct ? '<i class="fas fa-check text-green-400"></i>' : '<i class="fas fa-times text-red-400"></i>';
+                const borderColor = res.correct ? 'border-green-900/50' : 'border-red-900/50';
+                const bgColor = res.correct ? 'bg-green-900/10' : 'bg-red-900/10';
+                
+                container.innerHTML += `
+                    <div class="border ${borderColor} ${bgColor} rounded p-4 text-sm text-gray-300">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="font-bold text-white">Soru ${i+1}</div>
+                            <div class="text-lg">${icon}</div>
+                        </div>
+                        <div class="mb-3 opacity-80">${res.q}</div>
+                        <div class="bg-slate-900 p-2 rounded border border-slate-700 mt-2">
+                            <span class="text-cyan-400 font-bold"><i class="fas fa-lightbulb mr-1"></i> Analiz:</span> 
+                            ${res.exp}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function completeRoom() {
+            const room = ROOMS[state.currentRoomIndex];
+            playSound.unlock();
+            
+            const part = document.getElementById(room.partId);
+            if (part) {
+                part.classList.add('active');
+                if(room.id === 5) {
+                    document.getElementById('screen-text').setAttribute('opacity', '1');
+                    document.getElementById('part-track').setAttribute('stroke', '#00f0ff');
+                    document.getElementById('part-track').setAttribute('class', 'robot-part active drop-shadow-[0_0_8px_rgba(0,240,255,1)]');
+                    document.getElementById('robot-group').classList.add('anim-final-move');
+                }
+            }
+
+            document.getElementById('robot-status-text').innerHTML = `
+                <span class="text-success font-bold text-lg"><i class="fas fa-check-circle"></i> SİSTEM AKTİF</span><br>
+                ${room.successMsg}
+            `;
+            
+            document.getElementById('mini-sim').classList.add('hidden');
+            
+            state.currentRoomIndex++;
+            updateProgress();
+
+            if (state.currentRoomIndex >= ROOMS.length) {
+                setTimeout(showFinalResult, 2000); 
+            } else {
+                renderHub();
+            }
+        }
+
+        function updateProgress() {
+            const totalQuestions = ROOMS.reduce((sum, r) => sum + r.questions.length, 0);
+            let answered = state.allResults.length;
+            
+            const pct = Math.round((answered / totalQuestions) * 100);
+            document.getElementById('progress-bar').style.width = `${pct}%`;
+            document.getElementById('progress-text').innerText = `${pct}%`;
+            
+            const scoreEl = document.getElementById('score-display');
+            animateValue(scoreEl, parseInt(scoreEl.innerText), state.score, 500);
+        }
+
+        function animateValue(obj, start, end, duration) {
+            if(start === end) return;
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // --- RESULTS ---
+        function showFinalResult() {
+            playSound.unlock();
+            document.getElementById('main-ui').classList.add('hidden-screen');
+            document.getElementById('screen-result').classList.remove('hidden-screen');
+            startConfetti();
+            
+            const finalScore = state.score;
+            document.getElementById('final-score').innerText = finalScore;
+            
+            let rank, rankColor, rankIcon, recs = "";
+            
+            if (finalScore >= 90) {
+                rank = "Robotik Kodlama Ustası"; rankColor = "text-yellow-400"; rankIcon = "fa-crown";
+                recs = "Mükemmel! Algoritma mantığına ve EV3 sensör detaylarına tamamen hakimsin.";
+            } else if (finalScore >= 70) {
+                rank = "Robotik Uzmanı"; rankColor = "text-green-400"; rankIcon = "fa-star";
+                recs = "Tebrikler! Küçük detaylar dışında kodlama mantığın çok güçlü. Yanlış yaptığın görev odalarının analizlerini tekrar gözden geçirebilirsin.";
+            } else if (finalScore >= 50) {
+                rank = "Robotik Kaşifi"; rankColor = "text-blue-400"; rankIcon = "fa-compass";
+                recs = "Temel kavramları anlamışsın ancak karmaşık durumlarda hata yapabiliyorsun. Sensörlerin sınırlarını ve döngü/koşul yapılarını tekrar çalışmalısın.";
+            } else {
+                rank = "Robotik Çırağı"; rankColor = "text-orange-400"; rankIcon = "fa-wrench";
+                recs = "Algoritma mantığını kavramak için biraz daha pratiğe ihtiyacın var. Kod bloklarının çalışma sıralarını ve sensör okuma mantığını temelden tekrar etmen faydalı olacaktır.";
+            }
+            
+            document.getElementById('rank-title').innerText = rank;
+            document.getElementById('rank-title').className = `text-2xl font-bold title-font mb-2 ${rankColor}`;
+            document.getElementById('rank-icon').className = `fas ${rankIcon} text-6xl mb-4 ${rankColor}`;
+            document.getElementById('study-recommendations').innerText = recs;
+
+            const list = document.getElementById('stats-list');
+            list.innerHTML = "";
+            
+            ROOMS.forEach((room, i) => {
+                const rs = state.roomScores[i];
+                const correct = rs / 5;
+                const wrong = 4 - correct;
+                
+                list.innerHTML += `
+                    <li class="flex justify-between items-center bg-slate-800 p-3 rounded">
+                        <div>
+                            <div class="font-bold text-gray-200">${room.title.split('-')[0].trim()}</div>
+                            <div class="text-xs text-gray-400">${room.title.split('-')[1].trim()}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-cyan-400 font-bold">${rs} Puan</div>
+                            <div class="text-xs">
+                                <span class="text-success">${correct} Doğru</span> / 
+                                <span class="text-danger">${wrong} Yanlış</span>
+                            </div>
+                        </div>
+                    </li>
+                `;
+            });
+        }
+
+        // --- SIMPLE CONFETTI ---
+        function startConfetti() {
+            const canvas = document.getElementById('confetti');
+            canvas.classList.remove('hidden');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            let particles = [];
+            for (let i = 0; i < 150; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    w: Math.random() * 10 + 5,
+                    h: Math.random() * 10 + 5,
+                    vx: Math.random() * 2 - 1,
+                    vy: Math.random() * 3 + 2,
+                    color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                    rot: Math.random() * 360,
+                    rotSpeed: Math.random() * 10 - 5
+                });
+            }
+            
+            function render() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.y += p.vy;
+                    p.x += p.vx;
+                    p.rot += p.rotSpeed;
+                    if (p.y > canvas.height) p.y = -20;
+                    
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot * Math.PI / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+                    ctx.restore();
+                });
+                requestAnimationFrame(render);
+            }
+            render();
+            
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        }
+    </script>
+</body>
+</html>
